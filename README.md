@@ -9,6 +9,7 @@ Required Modules to run latest version (2.0)
 5. mtplotlib
 
 Description
+
 Current version (2.0) creates a seperate Excel file named audioData.xlsx and records your voice or sound input from
 headset. Volume of voice is recorded onto Excel file over 1000 iterations (about 28 seconds long) and generates
 graph from collected data of change in volume over time.
