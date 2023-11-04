@@ -1,0 +1,79 @@
+"""
+Simulated Osciloscope - Version 2.0
+Last Updated: Nov. 2, 2023
+"""
+
+
+#Imports
+import pyaudio
+import openpyxl
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#Capture Audio - Input
+#Frames per buffer
+CHUNK = 1024
+#Format of input
+FORMAT = pyaudio.paInt16
+#Number of audio channels
+CHANNELS = 1
+#Samples per second
+RATE = 44100
+
+#Create an empty DataFrame to store data
+data_frame = pd.DataFrame(columns=["Sound Level (dB)"])
+
+try:
+    audio = pyaudio.PyAudio()
+    stream = audio.open(
+        format = FORMAT,
+        channels = CHANNELS,
+        rate = RATE,
+        input = True,
+        frames_per_buffer = CHUNK)
+
+    print("Listening...")
+
+    #Measure sound levels for certain amount of time
+    counter = 0
+    while counter < 1000:
+        #Read audio data
+        data = stream.read(CHUNK)
+        #Convert data to numpy array
+        audioData = np.frombuffer(data, dtype = np.int16)
+        #Calculate RMS
+        rms = np.sqrt(np.mean(audioData**2))
+        #Calculate dB level
+        dB = 20 * np.log10(rms)
+        #Append the data to the DataFrame
+        data_frame = pd.concat([data_frame, pd.DataFrame({"Sound Level (dB)": [dB]})], ignore_index = True)
+        #Increment Counter
+        counter += 1
+
+#User terminates program through Ctrl + C
+except KeyboardInterrupt:
+    print("Program terminated")
+    raise SystemExit
+
+#Unexpected error catch
+except Exception as e:
+    print(f"An unexpected error occurred: {str(e)}")
+
+#Close audio stream and save data to Excel:
+finally:
+    if 'stream' in locals() and stream.is_active():
+        stream.stop_stream()
+        stream.close()
+    if 'audio' in locals():
+        audio.terminate()
+
+    #Save the DataFrame to an excel file
+    data_frame.to_excel("audioData.xlsx", index = False)
+
+    #Create a graph showing the data in a decibels over time format
+    plt.plot(data_frame["Sound Level (dB)"])
+    plt.title("Sound Level over Time")
+    plt.xlabel("Time (Iterations)")
+    plt.ylabel("Sound Level (dB)")
+    plt.show()
